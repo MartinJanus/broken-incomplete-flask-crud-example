@@ -18,15 +18,15 @@ mysql.init_app(app)
 def add():
   name = request.args.get('name')
   email = request.args.get('email')
-  if not name and not email:
-      return '{"Error":"Name or email required for update"}'
+  if not name or not email:
+      return '{"Error":"Name and email required for add"}'
 
   cur = mysql.connection.cursor() #create a connection to the SQL instance
   s='''INSERT INTO students(studentName, email) VALUES('{}','{}');'''.format(name,email) # kludge - use stored proc or params
   cur.execute(s)
   mysql.connection.commit()
 
-  return '{"Result":"Added Student Success"}' # Really? maybe we should check!
+  return '{"Result":"Added Student Success"}'
   
 @app.route("/") #Default - Show Data
 def read(): # Name of the method
