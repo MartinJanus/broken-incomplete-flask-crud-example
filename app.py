@@ -18,12 +18,15 @@ mysql.init_app(app)
 def add():
   name = request.args.get('name')
   email = request.args.get('email')
+  if not name and not email:
+      return '{"Error":"Name or email required for update"}'
+
   cur = mysql.connection.cursor() #create a connection to the SQL instance
   s='''INSERT INTO students(studentName, email) VALUES('{}','{}');'''.format(name,email) # kludge - use stored proc or params
   cur.execute(s)
   mysql.connection.commit()
 
-  return '{"Result":"Success"}' # Really? maybe we should check!
+  return '{"Result":"Added Student Success"}' # Really? maybe we should check!
   
 @app.route("/") #Default - Show Data
 def read(): # Name of the method
@@ -44,6 +47,40 @@ def read(): # Name of the method
     mimetype='application/json'
   )
   return ret #Return the data in a string format
+
+@app.route("/update/<int:studentId>")
+def update(studentId):
+  name = request.args.get('name')
+  email = request.args.get('email')
+
+  if not name and not email:
+      return '{"Error":"Name or email required for update"}'
+
+  cur = mysql.connection.cursor()
+  query = '''UPDATE students SET studentName='{}', email='{}' WHERE studentID={}'''.format(name, email, studentId)
+  cur.execute(query)
+  mysql.connection.commit()
+  cur.close()
+  return '{"Result":"Update Success"}' 
+
+
+@app.route("/delete/<int:studentId>")
+def delete(studentId):
+    cur = mysql.connection.cursor()
+    queryCheck = '''SELECT * FROM students WHERE studentID={}'''.format(studentId)
+    cur.execute(queryCheck)
+    student = cur.fetchone() #checking if student exists
+
+    if not student:
+        cur.close()
+        return '{"Error":"Student ID not found"}'
+
+    queryDelete = '''DELETE FROM students WHERE studentID={}'''.format(studentId)
+    cur.execute(queryDelete)
+    mysql.connection.commit()
+    cur.close()
+    return '{"Result":"Delete Success"}' 
+
+
 if __name__ == "__main__":
   app.run(host='0.0.0.0',port='8080') #Run the flask app at port 8080
-
